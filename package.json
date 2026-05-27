@@ -1,0 +1,62 @@
+{
+  "name": "@akagiyui/vite-plugin-git-revision",
+  "version": "0.1.0",
+  "description": "Vite 插件：在构建时注入当前 Git 提交哈希、提交时间和构建时间",
+  "keywords": [
+    "vite",
+    "vite-plugin",
+    "git",
+    "revision",
+    "commit",
+    "build-info"
+  ],
+  "license": "MIT",
+  "author": "AkagiYui",
+  "packageManager": "pnpm@11.1.2",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./client": {
+      "types": "./client.d.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "client": ["./client.d.ts"]
+    }
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist",
+    "client.d.ts"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "prepublishOnly": "pnpm run build"
+  },
+  "peerDependencies": {
+    "vite": ">=4"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "tsdown": "^0.22.0",
+    "typescript": "^5.7.0",
+    "vite": "^8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AkagiYui/vite-plugin-git-revision"
+  },
+  "homepage": "https://github.com/AkagiYui/vite-plugin-git-revision",
+  "bugs": ""
+}
