@@ -9,6 +9,12 @@
  * - `__GIT_COMMIT__`    —— 当前 HEAD 完整提交哈希（40 位）
  * - `__GIT_COMMIT_TIME__` —— 当前 HEAD 的提交时间（ISO 8601）
  *
+ * 取值优先级（由高到低）：
+ * 1. 环境变量 VITE_BUILD_TIME / VITE_GIT_COMMIT / VITE_GIT_COMMIT_TIME
+ *    （用于 CI/Docker 等无 .git 目录的场景）
+ * 2. git 命令（本地开发）
+ * 3. fallback 选项（默认 "unknown"）
+ *
  * 使用前需在项目 env.d.ts 中添加三斜线指令：
  * /// <reference types="@akagiyui/vite-plugin-git-revision/client" />
  */
@@ -74,25 +80,31 @@ export default function gitRevisionPlugin(
   return {
     name: "vite-plugin-git-revision",
     config() {
-      // 构建时间（ISO 8601）
-      const buildTime = new Date().toISOString()
+      // 构建时间：优先环境变量（CI/Docker 注入），其次当前时间
+      const buildTime = process.env.VITE_BUILD_TIME || new Date().toISOString()
 
       // 获取当前 HEAD 的完整提交哈希（40 位）
       let gitCommit = fallback
       // 获取当前 HEAD 的提交时间（ISO 8601）
       let gitCommitTime = fallback
 
-      try {
-        gitCommit = execSync("git rev-parse HEAD", {
-          encoding: "utf-8",
-          cwd,
-        }).trim()
-        gitCommitTime = execSync("git log -1 --format=%cI HEAD", {
-          encoding: "utf-8",
-          cwd,
-        }).trim()
-      } catch {
-        // 非 git 仓库或无 git 命令时静默回退
+      // 提交信息：优先环境变量（CI/Docker 注入），其次 git 命令
+      if (process.env.VITE_GIT_COMMIT) {
+        gitCommit = process.env.VITE_GIT_COMMIT
+        gitCommitTime = process.env.VITE_GIT_COMMIT_TIME || fallback
+      } else {
+        try {
+          gitCommit = execSync("git rev-parse HEAD", {
+            encoding: "utf-8",
+            cwd,
+          }).trim()
+          gitCommitTime = execSync("git log -1 --format=%cI HEAD", {
+            encoding: "utf-8",
+            cwd,
+          }).trim()
+        } catch {
+          // 非 git 仓库或无 git 命令时静默回退
+        }
       }
 
       return {

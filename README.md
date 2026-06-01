@@ -11,9 +11,23 @@ Vite 插件：在构建时注入当前 Git 提交信息（完整哈希、提交�
 - 注入当前 HEAD 的完整 40 位 Git 提交哈希
 - 注入当前 HEAD 的提交时间（ISO 8601）
 - 注入本次构建时间（ISO 8601）
+- **支持环境变量注入**（适用于 Docker / CI 等无 `.git` 目录的场景）
 - 支持自定义 Git 工作目录（monorepo 场景）
 - 获取失败时静默回退为 `"unknown"`
 - 零运行时开销：通过 Vite `define` 在编译期替换为字符串字面量
+
+### 环境变量（CI / Docker 场景）
+
+当项目在 Docker 容器或 CI 环境中构建、没有 `.git` 目录时，
+可通过环境变量直接注入构建信息，无需安装 `git` 或复制 `.git` 目录：
+
+| 环境变量 | 对应常量 | 示例 |
+|----------|----------|------|
+| `VITE_GIT_COMMIT` | `__GIT_COMMIT__` | `1b1460623458ab96cdb7f466a8ac8fcbed8957a5` |
+| `VITE_GIT_COMMIT_TIME` | `__GIT_COMMIT_TIME__` | `2026-05-27T11:16:44+08:00` |
+| `VITE_BUILD_TIME` | `__BUILD_TIME__` | `2026-05-27T11:42:10.123Z` |
+
+> 环境变量优先级高于 `git` 命令；未设置时自动 fallback 到 `git` 命令。
 
 ## 输出示例
 
@@ -113,6 +127,32 @@ gitRevision({
   /** 失败回退值，默认 "unknown" */
   fallback: "unavailable",
 })
+```
+
+### Docker / Containerfile 用法
+
+```dockerfile
+FROM node:lts-alpine AS frontend-builder
+WORKDIR /app
+COPY . .
+# 通过 ARG 接收构建参数，转为 ENV 供插件读取
+ARG VITE_GIT_COMMIT=unknown
+ARG VITE_GIT_COMMIT_TIME
+ARG VITE_BUILD_TIME
+ENV VITE_GIT_COMMIT=${VITE_GIT_COMMIT} \
+    VITE_GIT_COMMIT_TIME=${VITE_GIT_COMMIT_TIME} \
+    VITE_BUILD_TIME=${VITE_BUILD_TIME}
+RUN corepack enable && yarn build
+```
+
+构建时传入：
+
+```bash
+docker build \
+  --build-arg VITE_GIT_COMMIT=$(git rev-parse HEAD) \
+  --build-arg VITE_GIT_COMMIT_TIME=$(git log -1 --format=%cI HEAD) \
+  --build-arg VITE_BUILD_TIME=$(date -Iseconds) \
+  -t my-app:latest .
 ```
 
 ## License
