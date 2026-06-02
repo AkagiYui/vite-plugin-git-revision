@@ -1,6 +1,6 @@
 {
   "name": "@akagiyui/vite-plugin-git-revision",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Vite 插件：在构建时注入当前 Git 提交哈希、提交时间和构建时间",
   "keywords": [
     "vite",
